@@ -276,8 +276,8 @@ def convert1(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones=""
 			print >> fw, '~h "%s"' % hmm_name
 			print >> fw, "<BEGINHMM>"
 			print >> fw, "<NUMSTATES> %d" % (len(hmm) + 2)
-			for s in hmm:
-				print >> fw, "<STATE> %d" % s
+			for idx, s in enumerate(hmm):
+				print >> fw, "<STATE> %d" % (idx + 2)
 				print >> fw, '~s "state_%d"' % s
 			print >> fw, '~t "T_%s"' % trans_name
 			print >> fw, "<ENDHMM>"

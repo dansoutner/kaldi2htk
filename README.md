@@ -1,4 +1,4 @@
-# Kaldi to HTK GMM/HMM model convert
+# Simple Kaldi to HTK GMM/HMM model converting script
 
 ## Requirements
 
