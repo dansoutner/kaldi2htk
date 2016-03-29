@@ -20,8 +20,6 @@ python kaldi2HTKmodel.py <model.mdl> <phones.txt> <tree> <outputHTKmodel> <outpu
 Known limitations:
 * Currently supports only 3-state HMMs
 
-
-
 ## Licence
 
 Implemented by Daniel Soutner, NTIS - New Technologie for the Information Society,
