@@ -12,6 +12,7 @@
 
 ## Licence
 
-Implemented by Daniel Soutner, Department of Cybernetics, University of West Bohemia, Plzen, Czech rep. dsoutner@kky.zcu.cz, 2016.
+Implemented by Daniel Soutner, NTIS - New Technologie for the Information Society,
+University of West Bohemia, Plzen, Czech rep. dsoutner@kky.zcu.cz, 2016.
 
 Licensed under the 3-clause BSD.
