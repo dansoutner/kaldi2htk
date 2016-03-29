@@ -3,12 +3,24 @@
 ## Requirements
 
 1. Compiled Kaldi
+2. python
 
 ## Installation
 
 1. Check your KALDI path in Makefile
-2. make binaries
-3. convert kaldi model to
+2. make binaries with ```make```
+3. run :)
+
+## Usage
+
+```
+python kaldi2HTKmodel.py <model.mdl> <phones.txt> <tree> <outputHTKmodel> <outputTiedlist>
+```
+
+Known limitations:
+* Currently supports only 3-state HMMs
+
+
 
 ## Licence
 

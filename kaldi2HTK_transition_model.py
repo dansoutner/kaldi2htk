@@ -1,3 +1,5 @@
+
+
 import re
 import numpy as np
 import subprocess
@@ -9,18 +11,6 @@ sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
 print_transitions_bin = "print-transitions"
 context_to_pdf_bin = "context-to-pdf"
 gmm_copy_bin = "gmm-copy"
-
-
-def int2phones(filename):
-	# Load phones to dict
-	phones = {}
-	phones2int = {}
-	for raw_line in open(filename):
-		line = raw_line.strip().split()
-		if len(line) > 1:
-			phones[line[1]] = line[0]
-			phones2int[line[0]] = int(line[1])
-	return phones, phones2int
 
 
 def mat2str(mat):
@@ -37,7 +27,7 @@ def mat2str(mat):
 
 
 def list2str(l):
-	# Convert list to string
+	# Convert list to matrix-string
 	s = ""
 	for i in range(len(l)):
 		s += "%.6e" % l[i]
@@ -115,21 +105,20 @@ def load_kaldi_gmms(fmdl):
 def load_kaldi_transitions(ftrans):
 	# Load transitions
 	probs = {}
-	probs1 = {}
 
 	for line in open(ftrans):
 		lx = line.strip().split()
 		pdf = int(lx[1])
-		phone = int(lx[2])
+		# phone = int(lx[2])
 		a = int(lx[3])
 		b = int(lx[4])
 		prob = float(lx[6])
-		probs[(pdf, phone, a, b)] = prob
-		if (pdf, a, b) in probs1:
-			print "ERROR: Bad transitions read at", (pdf, a, b)
-		probs1[(pdf, a, b)] = prob
+		# probs[(pdf, phone, a, b)] = prob
+		# if (pdf, a, b) in probs1:
+		# 	print "ERROR: Bad transitions read at", (pdf, a, b)
+		probs[(pdf, a, b)] = prob
 
-	return probs, probs1
+	return probs
 
 
 def load_kaldi_hmms(fctx):
@@ -156,10 +145,10 @@ def load_kaldi_hmms(fctx):
 				hmms[tuple(hmm)] += [ctx]
 			hmm = [None, None, None]
 
-		# TODO something better than this hack - we never need more states than 3
+		# TODO something better than this hack - AP decode never need more states than 3
 		if n < 3:
 			hmm[n] = pdf
-		
+
 	del hmms[(None, None, None)]
 	return hmms
 
@@ -184,24 +173,27 @@ def to_htk_name(lst):
 
 
 def convert1(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="", GMM=False):
+
 	# print all transitions
 	shell("./%s %s > %s" % (print_transitions_bin, fmdl, ".transitions"))
-	_, trans = load_kaldi_transitions(".transitions")
+	trans = load_kaldi_transitions(".transitions")
+
 	# print all triphones
 	shell("./%s --sil-pdf-classes=3 --sil-phones='' %s %s > %s" % (context_to_pdf_bin, fphones, ftree, ".ctx"))
 	hmms = load_kaldi_hmms(".ctx")
+
+	# phones
+	phones2int, int2phones = load_kaldi_phones(fphones)
+
 	if GMM:
 		shell("%s --binary=false %s %s" % (gmm_copy_bin, fmdl, ".gmm"))
 		gmms = load_kaldi_gmms(".gmm")
-
-	phones2int, int2phones = load_kaldi_phones(fphones)
 
 	# Write HTK models
 	with open(foutname, "w") as fw:
 		print >> fw, "~o"
 		print >> fw, "<STREAMINFO> 1 %d" % vecSize
 		print >> fw, "<VECSIZE> %d<NULLD><USER><DIAGC>" % vecSize
-
 
 		# Write transitions
 		states = []
@@ -300,7 +292,7 @@ if __name__ == "__main__":
 
 	SIL = ["SIL", "SPN", "NSN"]
 	silphones = "1,2,3,4,5,6,7,8,9"
-	
+
 	if len(sys.argv) != 6:
 		print "Usage: Kaldi2HTKmodel.py <model.mdl> <phones.txt> <tree> <outputHTKmodel> <outputTiedlist>"
 		sys.exit()
