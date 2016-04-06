@@ -14,7 +14,7 @@ gmm_copy_bin = "gmm-copy"
 
 
 def mat2str(mat):
-	# Convert matrix to string
+	"""Convert numpy matrix to string"""
 	s = ""
 	for i in range(mat.shape[0]):
 		for j in range(mat.shape[1]):
@@ -27,7 +27,7 @@ def mat2str(mat):
 
 
 def list2str(l):
-	# Convert list to matrix-string
+	"""Convert list to matrix-string"""
 	s = ""
 	for i in range(len(l)):
 		s += "%.6e" % l[i]
@@ -41,7 +41,7 @@ def shell(cmd):
 
 
 def load_kaldi_gmms(fmdl):
-	# Load GMM model, from text .mdl file
+	"""Load Kaldi GMM model, from text .mdl file"""
 	mdl = {
 	"vecSize" : None,
 	"states" : None,
@@ -103,7 +103,8 @@ def load_kaldi_gmms(fmdl):
 
 
 def load_kaldi_transitions(ftrans):
-	# Load transitions
+	"""Load Kaldi transition model"""
+
 	probs = {}
 
 	for line in open(ftrans):
@@ -122,7 +123,7 @@ def load_kaldi_transitions(ftrans):
 
 
 def load_kaldi_hmms(fctx):
-	# Load HMMs
+	"""Load HMMs from text output of context to pdf binary"""
 	hmms ={}
 	
 	hmm = [None, None, None]
@@ -132,9 +133,11 @@ def load_kaldi_hmms(fctx):
 		n = int(lx[3])
 		pdf = int(lx[4])
 
+		# we do not need disambig phones
 		if "#" in ctx[0] or "#" in ctx[1] or "#" in ctx[2]:
 			continue
 
+		# we do not need <eps>
 		if "<eps>" in ctx[0] or "<eps>" in ctx[1] or "<eps>" in ctx[2]:
 			continue
 
@@ -149,12 +152,13 @@ def load_kaldi_hmms(fctx):
 		if n < 3:
 			hmm[n] = pdf
 
+	# could resist in list
 	del hmms[(None, None, None)]
 	return hmms
 
 
 def load_kaldi_phones(fphones):
-
+	"""Load kaldi phoesn table"""
 	phones2int = {}
 	int2phones = {}
 
@@ -164,15 +168,31 @@ def load_kaldi_phones(fphones):
 		i = int(lx[1])
 		phones2int[ph] = i
 		int2phones[i] = ph
-	
+
 	return phones2int, int2phones
 
 
+def phone_to_AP(ph, nse="CG ER GR HM LA LB LS NS SIL".split()):
+	if ph in nse:
+		return "_"+ph.lower()+"_"
+	else:
+		return ph
+
+
 def to_htk_name(lst):
-	return lst[0]+"-"+lst[1]+"+"+lst[2]
+	# original names
+	# return lst[0]+"-"+lst[1]+"+"+lst[2]
+	# AP conversion
+	# return phone_to_AP(lst[0]) + "-" + phone_to_AP(lst[1]) + "+" + phone_to_AP(lst[2])
+	nse = "CG ER GR HM LA LB LS NS SIL".split()
+	# NSE as mono
+	if lst[1] in nse:
+		return phone_to_AP(lst[1])
+	else:
+		return phone_to_AP(lst[0]) + "-" + phone_to_AP(lst[1]) + "+" + phone_to_AP(lst[2])
 
 
-def convert1(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="", GMM=False):
+def convert(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="", GMM=False):
 
 	# print all transitions
 	shell("./%s %s > %s" % (print_transitions_bin, fmdl, ".transitions"))
@@ -188,6 +208,7 @@ def convert1(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones=""
 	if GMM:
 		shell("%s --binary=false %s %s" % (gmm_copy_bin, fmdl, ".gmm"))
 		gmms = load_kaldi_gmms(".gmm")
+		vecSize = gmms["vecSize"]
 
 	# Write HTK models
 	with open(foutname, "w") as fw:
@@ -228,10 +249,8 @@ def convert1(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones=""
 			print >> fw, "<TRANSP> %d" % (len(hmm) + 2)
 			print >> fw, mat2str(trans_mat)
 
-
 		if GMM:
-			# Write GMM states
-			print gmms["vecSize"]
+			# Write GMMs
 			for s in gmms["states"].keys():
 				print >> fw, '~s "state_%d"' % s
 				num_mixes = len(gmms["states"][s]["GConsts"])
@@ -246,7 +265,7 @@ def convert1(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones=""
 					print >> fw, "<GCONST> %e" % gconst
 
 		else:
-			# Write fake GMM states
+			# Write fake GMMs
 			for s in set(states):
 				print >> fw, '~s "state_%d"' % s
 				num_mixes = 1
@@ -262,8 +281,7 @@ def convert1(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones=""
 		# Write HMMs
 		for hmm in hmms.keys():
 			trans_name = "_".join([str(x) for x in hmm])
-			hmm_name = to_htk_name(hmms[hmm][0]) # hmms[hmm][0][0]+"-"+hmms[hmm][0][0]+"+"+hmms[hmm][0][0]
-			# print hmm_name, hmm, hmms[hmm]
+			hmm_name = to_htk_name(hmms[hmm][0])
 
 			print >> fw, '~h "%s"' % hmm_name
 			print >> fw, "<BEGINHMM>"
@@ -277,16 +295,19 @@ def convert1(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones=""
 		os.fsync(fw)
 		fw.flush()
 
-	# Write HTK models
+	# Write HTK tiedlist
+	writen = set()
 	with open(ftiedname, "w") as fw:
-		# Write tiedlist
 		for hmm in hmms.keys():
 			if len(hmms[hmm]) > 1:
 				print >> fw, to_htk_name(hmms[hmm][0])
 				for i in range(1, len(hmms[hmm])):
-					print >> fw, to_htk_name(hmms[hmm][i]), to_htk_name(hmms[hmm][0])
+					if not (to_htk_name(hmms[hmm][i]), to_htk_name(hmms[hmm][0])) in writen:
+						print >> fw, to_htk_name(hmms[hmm][i]), to_htk_name(hmms[hmm][0])
+						writen.add((to_htk_name(hmms[hmm][i]), to_htk_name(hmms[hmm][0])))
 			else:
 				print >> fw, to_htk_name(hmms[hmm][0])
+
 
 if __name__ == "__main__":
 
@@ -303,4 +324,4 @@ if __name__ == "__main__":
 	OUTPUT_MODEL_FILE = sys.argv[4]
 	OUTPUT_TIEDLIST_FILE = sys.argv[5]
 
-	convert1(MODEL_FILE, PHONES_FILE, TREE_FILE, OUTPUT_MODEL_FILE, OUTPUT_TIEDLIST_FILE, vecSize=39, silphones=silphones, GMM=True)
+	convert(MODEL_FILE, PHONES_FILE, TREE_FILE, OUTPUT_MODEL_FILE, OUTPUT_TIEDLIST_FILE, vecSize=39, silphones=silphones, GMM=True)
