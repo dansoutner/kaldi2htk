@@ -183,13 +183,43 @@ def to_htk_name(lst):
 	# original names
 	# return lst[0]+"-"+lst[1]+"+"+lst[2]
 	# AP conversion
-	# return phone_to_AP(lst[0]) + "-" + phone_to_AP(lst[1]) + "+" + phone_to_AP(lst[2])
+	#return phone_to_AP(lst[0]) + "-" + phone_to_AP(lst[1]) + "+" + phone_to_AP(lst[2])
 	nse = "CG ER GR HM LA LB LS NS SIL".split()
 	# NSE as mono
 	if lst[1] in nse:
+		# print phone_to_AP(lst[0]) + "-" + phone_to_AP(lst[1]) + "+" + phone_to_AP(lst[2])
 		return phone_to_AP(lst[1])
 	else:
 		return phone_to_AP(lst[0]) + "-" + phone_to_AP(lst[1]) + "+" + phone_to_AP(lst[2])
+
+
+def hmms_to_AP(hmms):
+	"""Security triphone chceck: we are not allowed to have _nse_ as middle triphone,
+	but only as monophone"""
+	ap_hmms = {}
+	nse = "CG ER GR HM LA LB LS NS SIL".split()
+	for hmm in hmms.keys():
+		nse_tri = 0
+		for idx, tri in enumerate(hmms[hmm]):
+			if tri[1] in nse:
+				nse_tri += 1
+
+		if nse_tri > 0:
+			print nse_tri
+			print hmm, hmms[hmm]
+
+		if nse_tri > 0 and nse_tri < 2000: # TODO better hack!
+			ap_tied = []
+			for tri in hmms[hmm]:
+				if tri[1] not in nse:
+					ap_tied.append(tri)
+				else:
+					print "WARNING: Kicking out triphone", tri
+			ap_hmms[hmm] = ap_tied
+		else:
+			ap_hmms[hmm] = hmms[hmm]
+
+	return ap_hmms
 
 
 def convert(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="", GMM=False):
@@ -201,6 +231,7 @@ def convert(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="",
 	# print all triphones
 	shell("./%s --sil-pdf-classes=3 --sil-phones='' %s %s > %s" % (context_to_pdf_bin, fphones, ftree, ".ctx"))
 	hmms = load_kaldi_hmms(".ctx")
+	hmms = hmms_to_AP(hmms) # convert to AP acceptable format
 
 	# phones
 	phones2int, int2phones = load_kaldi_phones(fphones)
@@ -296,15 +327,15 @@ def convert(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="",
 		fw.flush()
 
 	# Write HTK tiedlist
-	writen = set()
+	written = set() # just in case, we are writing something second time
 	with open(ftiedname, "w") as fw:
 		for hmm in hmms.keys():
 			if len(hmms[hmm]) > 1:
 				print >> fw, to_htk_name(hmms[hmm][0])
 				for i in range(1, len(hmms[hmm])):
-					if not (to_htk_name(hmms[hmm][i]), to_htk_name(hmms[hmm][0])) in writen:
-						print >> fw, to_htk_name(hmms[hmm][i]), to_htk_name(hmms[hmm][0])
-						writen.add((to_htk_name(hmms[hmm][i]), to_htk_name(hmms[hmm][0])))
+						if (to_htk_name(hmms[hmm][i]), to_htk_name(hmms[hmm][0])) not in written:
+							print >> fw, to_htk_name(hmms[hmm][i]), to_htk_name(hmms[hmm][0])
+							written.add((to_htk_name(hmms[hmm][i]), to_htk_name(hmms[hmm][0])))
 			else:
 				print >> fw, to_htk_name(hmms[hmm][0])
 
