@@ -156,7 +156,7 @@ def load_kaldi_hmms(fctx):
 
 
 def load_kaldi_phones(fphones):
-	"""Load kaldi phoesn table"""
+	"""Load Kaldi phones table"""
 	phones2int = {}
 	int2phones = {}
 
@@ -170,25 +170,9 @@ def load_kaldi_phones(fphones):
 	return phones2int, int2phones
 
 
-def phone_to_AP(ph, nse="CG ER GR HM LA LB LS NS SIL".split()):
-	if ph in nse:
-		return "_"+ph.lower()+"_"
-	else:
-		return ph
-
-
 def to_htk_name(lst):
 	# original names
-	# return lst[0]+"-"+lst[1]+"+"+lst[2]
-	# AP conversion
-	#return phone_to_AP(lst[0]) + "-" + phone_to_AP(lst[1]) + "+" + phone_to_AP(lst[2])
-	nse = "CG ER GR HM LA LB LS NS SIL".split()
-	# NSE as mono
-	if lst[1] in nse:
-		# print phone_to_AP(lst[0]) + "-" + phone_to_AP(lst[1]) + "+" + phone_to_AP(lst[2])
-		return phone_to_AP(lst[1])
-	else:
-		return phone_to_AP(lst[0]) + "-" + phone_to_AP(lst[1]) + "+" + phone_to_AP(lst[2])
+	return lst[0]+"-"+lst[1]+"+"+lst[2]
 
 
 def convert(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="", GMM=False):
@@ -200,7 +184,6 @@ def convert(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="",
 	# print all triphones
 	shell("./%s --sil-pdf-classes=3 --sil-phones='' %s %s > %s" % (context_to_pdf_bin, fphones, ftree, ".ctx"))
 	hmms = load_kaldi_hmms(".ctx")
-	print hmms
 
 	# phones
 	phones2int, int2phones = load_kaldi_phones(fphones)
@@ -220,10 +203,9 @@ def convert(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="",
 		states = []
 		for hmm in hmms.keys():
 			trans_name = "_".join([str(x) for x in hmm])
-			# print trans_name, hmm, hmms[hmm]
 
 			trans_mat = np.zeros((len(hmm)+2, len(hmm)+2))
-			trans_mat[0, 1] = 1.
+			trans_mat[0,1] = 1.
 			for i, state in enumerate(hmm):
 				states.append(state)
 				for b in range(0, 2):
@@ -287,17 +269,12 @@ def convert(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="",
 		fw.flush()
 
 	# Write HTK tiedlist
-	written = set() # just in case, we are writing something second time
 	with open(ftiedname, "w") as fw:
 		for hmm in hmms.keys():
 			if len(hmms[hmm]) > 1:
 				print >> fw, to_htk_name(hmms[hmm][0])
 				for i in range(1, len(hmms[hmm])):
-						if (to_htk_name(hmms[hmm][i]), to_htk_name(hmms[hmm][0])) not in written \
-							and to_htk_name(hmms[hmm][i]) != to_htk_name(hmms[hmm][0]):
-
-							print >> fw, to_htk_name(hmms[hmm][i]), to_htk_name(hmms[hmm][0])
-							written.add((to_htk_name(hmms[hmm][i]), to_htk_name(hmms[hmm][0])))
+					print >> fw, to_htk_name(hmms[hmm][i]), to_htk_name(hmms[hmm][0])
 			else:
 				print >> fw, to_htk_name(hmms[hmm][0])
 
@@ -308,7 +285,7 @@ if __name__ == "__main__":
 	silphones = "1,2,3,4,5,6,7,8,9"
 
 	if len(sys.argv) != 6:
-		print "Usage: Kaldi2HTKmodel.py <model.mdl> <phones.txt> <tree> <outputHTKmodel> <outputTiedlist>"
+		print "Usage: kaldi2HTK.py <model.mdl> <phones.txt> <tree> <outputHTKmodel> <outputTiedlist>"
 		sys.exit()
 
 	MODEL_FILE = sys.argv[1]
