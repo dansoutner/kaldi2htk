@@ -152,11 +152,17 @@ def load_kaldi_hmms(fctx):
 			hmm.append(pdf)
 			ctx_last = ctx
 
+	# and the last one :)
+	if not tuple(hmm) in hmms:
+		hmms[tuple(hmm)] = [ctx_last]
+	else:
+		hmms[tuple(hmm)] += [ctx_last]
+
 	return hmms
 
 
 def load_kaldi_phones(fphones):
-	"""Load kaldi phoesn table"""
+	"""Load Kaldi phones table"""
 	phones2int = {}
 	int2phones = {}
 
@@ -181,7 +187,7 @@ def to_htk_name(lst):
 	# original names
 	# return lst[0]+"-"+lst[1]+"+"+lst[2]
 	# AP conversion
-	#return phone_to_AP(lst[0]) + "-" + phone_to_AP(lst[1]) + "+" + phone_to_AP(lst[2])
+	# return phone_to_AP(lst[0]) + "-" + phone_to_AP(lst[1]) + "+" + phone_to_AP(lst[2])
 	nse = "CG ER GR HM LA LB LS NS SIL".split()
 	# NSE as mono
 	if lst[1] in nse:
@@ -220,7 +226,6 @@ def convert(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="",
 		states = []
 		for hmm in hmms.keys():
 			trans_name = "_".join([str(x) for x in hmm])
-			# print trans_name, hmm, hmms[hmm]
 
 			trans_mat = np.zeros((len(hmm)+2, len(hmm)+2))
 			trans_mat[0, 1] = 1.
@@ -229,7 +234,6 @@ def convert(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="",
 				for b in range(0, 2):
 					ph = phones2int[hmms[hmm][0][1]]
 					try:
-						# p = trans[state, ph, i, b]
 						p = trans[state, i, b]
 					except KeyError:
 						print "ERROR: Not found transition for pdf %d with phone %d at %d %d" % (state, ph, i, b)
@@ -287,7 +291,7 @@ def convert(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="",
 		fw.flush()
 
 	# Write HTK tiedlist
-	written = set() # just in case, we are writing something second time
+	written = set()  # just in case, we are writing something second time
 	with open(ftiedname, "w") as fw:
 		for hmm in hmms.keys():
 			if len(hmms[hmm]) > 1:
@@ -304,7 +308,7 @@ def convert(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="",
 
 if __name__ == "__main__":
 
-	SIL = ["SIL", "SPN", "NSN"]
+	silphones_str = "CG ER GR HM LA LB LS NS SIL".split()
 	silphones = "1,2,3,4,5,6,7,8,9"
 
 	if len(sys.argv) != 6:

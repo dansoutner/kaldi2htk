@@ -205,7 +205,7 @@ def convert(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="",
 			trans_name = "_".join([str(x) for x in hmm])
 
 			trans_mat = np.zeros((len(hmm)+2, len(hmm)+2))
-			trans_mat[0,1] = 1.
+			trans_mat[0, 1] = 1.
 			for i, state in enumerate(hmm):
 				states.append(state)
 				for b in range(0, 2):
