@@ -206,7 +206,6 @@ def convert(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="",
 	# print all triphones
 	shell("./%s --sil-pdf-classes=3 --sil-phones='' %s %s > %s" % (context_to_pdf_bin, fphones, ftree, ".ctx"))
 	hmms = load_kaldi_hmms(".ctx")
-	print hmms
 
 	# phones
 	phones2int, int2phones = load_kaldi_phones(fphones)
