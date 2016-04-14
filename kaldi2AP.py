@@ -191,7 +191,6 @@ def to_htk_name(lst):
 	nse = "CG ER GR HM LA LB LS NS SIL".split()
 	# NSE as mono
 	if lst[1] in nse:
-		# print phone_to_AP(lst[0]) + "-" + phone_to_AP(lst[1]) + "+" + phone_to_AP(lst[2])
 		return phone_to_AP(lst[1])
 	else:
 		return phone_to_AP(lst[0]) + "-" + phone_to_AP(lst[1]) + "+" + phone_to_AP(lst[2])
@@ -211,7 +210,7 @@ def convert(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="",
 	phones2int, int2phones = load_kaldi_phones(fphones)
 
 	if GMM:
-		shell("%s --binary=false %s %s" % (gmm_copy_bin, fmdl, ".gmm"))
+		shell("%s --binary=false --verbose=10 %s %s" % (gmm_copy_bin, fmdl, ".gmm"))
 		gmms = load_kaldi_gmms(".gmm")
 		vecSize = gmms["vecSize"]
 

@@ -18,7 +18,7 @@ python kaldi2HTKmodel.py <model.mdl> <phones.txt> <tree> <outputHTKmodel> <outpu
 ```
 
 Known limitations:
-* Currently supports only 3-state HMMs
+* Possible bug in Kaldi GMM text export - floats truncated to max 999.9999
 
 ## Licence
 
