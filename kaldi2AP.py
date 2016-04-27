@@ -319,4 +319,4 @@ if __name__ == "__main__":
 	OUTPUT_MODEL_FILE = sys.argv[4]
 	OUTPUT_TIEDLIST_FILE = sys.argv[5]
 
-	convert(MODEL_FILE, PHONES_FILE, TREE_FILE, OUTPUT_MODEL_FILE, OUTPUT_TIEDLIST_FILE, vecSize=39, silphones=silphones, GMM=True)
+	convert(MODEL_FILE, PHONES_FILE, TREE_FILE, OUTPUT_MODEL_FILE, OUTPUT_TIEDLIST_FILE, vecSize=36, silphones=silphones, GMM=False)
