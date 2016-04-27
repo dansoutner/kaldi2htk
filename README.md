@@ -16,6 +16,8 @@
 python kaldi2HTKmodel.py <model.mdl> <phones.txt> <tree> <outputHTKmodel> <outputTiedlist>
 ```
 
+Note: script kaldi2AP.py is modification of kaldi2HTK.py suited for our decoder
+
 ## Licence
 
 Implemented by Daniel Soutner, NTIS - New Technologie for the Information Society,
