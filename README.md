@@ -2,23 +2,19 @@
 
 ## Requirements
 
-1. Compiled Kaldi
+1. Compiled Kaldi (kaldi-asr.org)
 2. python
 
-## Installation
+## Compilation
 
 1. Check your KALDI path in Makefile
 2. make binaries with ```make```
-3. run :)
 
 ## Usage
 
 ```
 python kaldi2HTKmodel.py <model.mdl> <phones.txt> <tree> <outputHTKmodel> <outputTiedlist>
 ```
-
-Known limitations:
-* Possible bug in Kaldi GMM text export - floats truncated to max 999.9999
 
 ## Licence
 

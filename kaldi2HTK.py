@@ -152,6 +152,11 @@ def load_kaldi_hmms(fctx):
 			hmm.append(pdf)
 			ctx_last = ctx
 
+	# and the last one :)
+	if not tuple(hmm) in hmms:
+		hmms[tuple(hmm)] = [ctx_last]
+	else:
+		hmms[tuple(hmm)] += [ctx_last]
 	return hmms
 
 
@@ -269,12 +274,17 @@ def convert(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="",
 		fw.flush()
 
 	# Write HTK tiedlist
+	written = set()  # just in case, we are writing something second time
 	with open(ftiedname, "w") as fw:
 		for hmm in hmms.keys():
 			if len(hmms[hmm]) > 1:
 				print >> fw, to_htk_name(hmms[hmm][0])
 				for i in range(1, len(hmms[hmm])):
-					print >> fw, to_htk_name(hmms[hmm][i]), to_htk_name(hmms[hmm][0])
+						if (to_htk_name(hmms[hmm][i]), to_htk_name(hmms[hmm][0])) not in written \
+							and to_htk_name(hmms[hmm][i]) != to_htk_name(hmms[hmm][0]):
+
+							print >> fw, to_htk_name(hmms[hmm][i]), to_htk_name(hmms[hmm][0])
+							written.add((to_htk_name(hmms[hmm][i]), to_htk_name(hmms[hmm][0])))
 			else:
 				print >> fw, to_htk_name(hmms[hmm][0])
 
