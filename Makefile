@@ -7,7 +7,7 @@ EXTRA_CXXFLAGS = -Wno-sign-compare -I${KALDI}
 
 include ${KALDI}/kaldi.mk
 
-BINFILES =  print-transitions context-to-pdf gmm-copy make-pdf-to-tid-transducer
+BINFILES =  context-to-pdf print-transitions gmm-copy make-pdf-to-tid-transducer
 			# gmm-copy : is in $kaldipath/src/gmmbin
 			# make-pdf-to-tid-transducer : is in bin/make-pdf-to-tid-transducer.cc
 

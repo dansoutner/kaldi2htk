@@ -20,7 +20,7 @@
 #include "hmm/hmm-utils.h"
 #include "util/common-utils.h"
 #include "fst/fstlib.h"
-
+#include "matrix/kaldi-matrix.cc"
 
 int main(int argc, char *argv[]) {
   try {

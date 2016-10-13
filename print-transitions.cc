@@ -20,7 +20,9 @@
 #include "hmm/hmm-utils.h"
 #include "util/common-utils.h"
 #include "fst/fstlib.h"
-
+#include "base/kaldi-common.h"
+#include "gmm/am-diag-gmm.h"
+#include "matrix/kaldi-matrix.cc"
 
 int main(int argc, char *argv[]) {
 #ifdef _MSC_VER
@@ -47,12 +49,9 @@ int main(int argc, char *argv[]) {
       exit(1);
     }
 
-    std::string trans_model_filename = po.GetArg(1);
-
-    TransitionModel trans_model;
-
-    ReadKaldiObject(trans_model_filename, &trans_model);
-
+	std::string trans_model_filename = po.GetArg(1);
+	TransitionModel trans_model;
+	ReadKaldiObject(trans_model_filename, &trans_model);
 
 	for (int32 i = 1; i < trans_model.NumTransitionIds() + 1; i++)
 		{
