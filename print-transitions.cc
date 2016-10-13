@@ -32,9 +32,6 @@ int main(int argc, char *argv[]) {
   try {
     using namespace kaldi;
     typedef kaldi::int32 int32;
-    //using fst::SymbolTable;
-    //using fst::VectorFst;
-    //using fst::StdArc;
 
     const char *usage =
         "Write out transition-ids, phones, pdf-class, transition-idx\n"
@@ -51,11 +48,9 @@ int main(int argc, char *argv[]) {
     }
 
     std::string trans_model_filename = po.GetArg(1);
-    //std::string fst_out_filename = po.GetOptArg(2);
 
     TransitionModel trans_model;
-    //HmmTopology trans_model;
-    
+
     ReadKaldiObject(trans_model_filename, &trans_model);
 
 
@@ -72,6 +67,7 @@ int main(int argc, char *argv[]) {
 			<< trans_model.IsFinal(i) << "\n";
 		}
 
+	// old debug code bellow
 	/*
 	for (int32 i = 1; i < trans_model.NumTransitionStates() + 1; i++)
 		{
@@ -81,25 +77,20 @@ int main(int argc, char *argv[]) {
 			<< trans_model.GetNonSelfLoopLogProb(i) << "\n";
 	}
 	*/
-
-
 	//std::cout << trans_model.Print();
 	//std::cout << trans_model.TopologyForPhone(1)[0];
-/*
-int32 	TransitionIdToTransitionState (int32 trans_id) const
-int32 	TransitionIdToTransitionIndex (int32 trans_id) const
-int32 	TransitionIdToPdf (int32 trans_id) const
-int32 	TransitionIdToPhone (int32 trans_id) const
-int32 	TransitionIdToPdfClass (int32 trans_id) const
-int32 	TransitionIdToHmmState (int32 trans_id) const
-*/
-
-/*
-int32 	TransitionStateToPhone (int32 trans_state) const
-int32 	TransitionStateToHmmState (int32 trans_state) const
-int32 	TransitionStateToPdf (int32 trans_state) const
-int32 	SelfLoopOf (int32 trans_state) const
-*/
+	/*
+	int32 	TransitionIdToTransitionState (int32 trans_id) const
+	int32 	TransitionIdToTransitionIndex (int32 trans_id) const
+	int32 	TransitionIdToPdf (int32 trans_id) const
+	int32 	TransitionIdToPhone (int32 trans_id) const
+	int32 	TransitionIdToPdfClass (int32 trans_id) const
+	int32 	TransitionIdToHmmState (int32 trans_id) const
+	int32 	TransitionStateToPhone (int32 trans_state) const
+	int32 	TransitionStateToHmmState (int32 trans_state) const
+	int32 	TransitionStateToPdf (int32 trans_state) const
+	int32 	SelfLoopOf (int32 trans_state) const
+	*/
 
   } catch(const std::exception &e) {
     std::cerr << e.what();
