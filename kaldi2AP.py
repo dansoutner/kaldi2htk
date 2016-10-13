@@ -183,20 +183,18 @@ def phone_to_AP(ph, nse="CG ER GR HM LA LB LS NS SIL".split()):
 		return ph
 
 
-def to_htk_name(lst):
+def to_htk_name(lst, nse="CG ER GR HM LA LB LS NS SIL".split()):
 	# original names
 	# return lst[0]+"-"+lst[1]+"+"+lst[2]
+
 	# AP conversion
-	# return phone_to_AP(lst[0]) + "-" + phone_to_AP(lst[1]) + "+" + phone_to_AP(lst[2])
-	nse = "CG ER GR HM LA LB LS NS SIL".split()
-	# NSE as mono
-	if lst[1] in nse:
-		return phone_to_AP(lst[1])
+	if lst[1] in nse:			# NSE as mono
+		return phone_to_AP(lst[1], nse=nse)
 	else:
-		return phone_to_AP(lst[0]) + "-" + phone_to_AP(lst[1]) + "+" + phone_to_AP(lst[2])
+		return phone_to_AP(lst[0], nse=nse) + "-" + phone_to_AP(lst[1], nse=nse) + "+" + phone_to_AP(lst[2], nse=nse)
 
 
-def convert(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="", GMM=False):
+def convert(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="", silphones_str=["SIL"], GMM=False):
 
 	# print all transitions
 	shell("./%s %s > %s" % (print_transitions_bin, fmdl, ".transitions"))
@@ -274,7 +272,7 @@ def convert(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="",
 		# Write HMMs
 		for hmm in hmms.keys():
 			trans_name = "_".join([str(x) for x in hmm])
-			hmm_name = to_htk_name(hmms[hmm][0])
+			hmm_name = to_htk_name(hmms[hmm][0], nse=silphones_str)
 
 			print >> fw, '~h "%s"' % hmm_name
 			print >> fw, "<BEGINHMM>"
@@ -293,21 +291,25 @@ def convert(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="",
 	with open(ftiedname, "w") as fw:
 		for hmm in hmms.keys():
 			if len(hmms[hmm]) > 1:
-				print >> fw, to_htk_name(hmms[hmm][0])
+				print >> fw, to_htk_name(hmms[hmm][0], nse=silphones_str)
 				for i in range(1, len(hmms[hmm])):
-						if (to_htk_name(hmms[hmm][i]), to_htk_name(hmms[hmm][0])) not in written \
-							and to_htk_name(hmms[hmm][i]) != to_htk_name(hmms[hmm][0]):
+						if (to_htk_name(hmms[hmm][i], nse=silphones_str), to_htk_name(hmms[hmm][0], nse=silphones_str)) not in written \
+							and to_htk_name(hmms[hmm][i], nse=silphones_str) != to_htk_name(hmms[hmm][0], nse=silphones_str):
 
-							print >> fw, to_htk_name(hmms[hmm][i]), to_htk_name(hmms[hmm][0])
-							written.add((to_htk_name(hmms[hmm][i]), to_htk_name(hmms[hmm][0])))
+							print >> fw, to_htk_name(hmms[hmm][i], nse=silphones_str), to_htk_name(hmms[hmm][0], nse=silphones_str)
+							written.add((to_htk_name(hmms[hmm][i], nse=silphones_str), to_htk_name(hmms[hmm][0], nse=silphones_str)))
 			else:
-				print >> fw, to_htk_name(hmms[hmm][0])
+				print >> fw, to_htk_name(hmms[hmm][0], nse=silphones_str)
 
 
 if __name__ == "__main__":
 
 	silphones_str = "CG ER GR HM LA LB LS NS SIL".split()
 	silphones = "1,2,3,4,5,6,7,8,9"
+
+	#silphones_str = "DISTORTION DTMF EHM EHMNO EHMYES LAUGH NOISE SIL SLURP SPEAKER UNINTELLIGIBLE".split()
+	#silphones = "1,2,3,4,5,6,7,8,9,10,11"
+
 
 	if len(sys.argv) != 6:
 		print "Usage: Kaldi2HTKmodel.py <model.mdl> <phones.txt> <tree> <outputHTKmodel> <outputTiedlist>"
@@ -319,4 +321,4 @@ if __name__ == "__main__":
 	OUTPUT_MODEL_FILE = sys.argv[4]
 	OUTPUT_TIEDLIST_FILE = sys.argv[5]
 
-	convert(MODEL_FILE, PHONES_FILE, TREE_FILE, OUTPUT_MODEL_FILE, OUTPUT_TIEDLIST_FILE, vecSize=36, silphones=silphones, GMM=False)
+	convert(MODEL_FILE, PHONES_FILE, TREE_FILE, OUTPUT_MODEL_FILE, OUTPUT_TIEDLIST_FILE, vecSize=36, silphones=silphones, silphones_str=silphones_str, GMM=True)
