@@ -208,7 +208,7 @@ def convert(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="",
 	phones2int, int2phones = load_kaldi_phones(fphones)
 
 	if GMM:
-		shell("%s --binary=false --verbose=10 %s %s" % (gmm_copy_bin, fmdl, ".gmm"))
+		shell("%s --binary=false --verbose=1 %s %s" % (gmm_copy_bin, fmdl, ".gmm"))
 		gmms = load_kaldi_gmms(".gmm")
 		vecSize = gmms["vecSize"]
 
@@ -243,7 +243,7 @@ def convert(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="",
 		if GMM:
 			# Write GMMs
 			for s in gmms["states"].keys():
-				print >> fw, '~s "state_%d"' % s
+				print >> fw, '~s "state_%04d"' % s
 				num_mixes = len(gmms["states"][s]["GConsts"])
 				print >> fw, "<NUMMIXES> %d" % num_mixes
 				for gmm in range(num_mixes):
@@ -258,7 +258,7 @@ def convert(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="",
 		else:
 			# Write fake GMMs
 			for s in set(states):
-				print >> fw, '~s "state_%d"' % s
+				print >> fw, '~s "state_%04d"' % s
 				num_mixes = 1
 				print >> fw, "<NUMMIXES> %d" % num_mixes
 				for gmm in range(num_mixes):
@@ -279,7 +279,7 @@ def convert(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="",
 			print >> fw, "<NUMSTATES> %d" % (len(hmm) + 2)
 			for idx, s in enumerate(hmm):
 				print >> fw, "<STATE> %d" % (idx + 2)
-				print >> fw, '~s "state_%d"' % s
+				print >> fw, '~s "state_%04d"' % s
 			print >> fw, '~t "T_%s"' % trans_name
 			print >> fw, "<ENDHMM>"
 
@@ -302,14 +302,23 @@ def convert(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="",
 				print >> fw, to_htk_name(hmms[hmm][0], nse=silphones_str)
 
 
+def detect_NSE(phones_file, min_len=3):
+	"""
+	All phones in upper case, longer then MIN_LEN and without # in name
+	"""
+	phones = [x.strip().split()[0] for x in open(phones_file).readlines()]
+	nse = [x for x in phones if (len(x) >= min_len) and (x.upper() == x) and ("#" not in x)]
+	idx = [phones.index(x) for x in nse]
+	return nse, idx
+
 if __name__ == "__main__":
 
-	silphones_str = "CG ER GR HM LA LB LS NS SIL".split()
-	silphones = "1,2,3,4,5,6,7,8,9"
-
+	# now detected automatically
+	#silphones_str = "CG ER GR HM LA LB LS NS SIL".split()
+	#silphones = "1,2,3,4,5,6,7,8,9"
 	#silphones_str = "DISTORTION DTMF EHM EHMNO EHMYES LAUGH NOISE SIL SLURP SPEAKER UNINTELLIGIBLE".split()
-	#silphones = "1,2,3,4,5,6,7,8,9,10,11"
-
+	#silphones_str = "INHALE NOISE EEE HMM SIL MOUTH LAUGH".split()
+	#silphones = "1,2,3,4,5,6,7"
 
 	if len(sys.argv) != 6:
 		print "Usage: Kaldi2HTKmodel.py <model.mdl> <phones.txt> <tree> <outputHTKmodel> <outputTiedlist>"
@@ -321,4 +330,10 @@ if __name__ == "__main__":
 	OUTPUT_MODEL_FILE = sys.argv[4]
 	OUTPUT_TIEDLIST_FILE = sys.argv[5]
 
-	convert(MODEL_FILE, PHONES_FILE, TREE_FILE, OUTPUT_MODEL_FILE, OUTPUT_TIEDLIST_FILE, vecSize=36, silphones=silphones, silphones_str=silphones_str, GMM=True)
+	silphones_str, silphones = detect_NSE(PHONES_FILE, min_len=2)
+	print >> sys.stderr, "NSE phones:", " ".join(silphones_str)
+	print >> sys.stderr, "NSE phones:", " ".join([str(x) for x in silphones])
+	convert(MODEL_FILE, PHONES_FILE, TREE_FILE, OUTPUT_MODEL_FILE,
+	        OUTPUT_TIEDLIST_FILE, vecSize=36,
+	        silphones=",".join([str(x) for x in silphones]),
+	        silphones_str=silphones_str, GMM=True)

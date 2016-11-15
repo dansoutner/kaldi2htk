@@ -1,0 +1,13 @@
+# Created by .ignore support plugin (hsz.mobi)
+.*
+/saveBinary.py
+/gmm-copy
+/kaldi2NNEris.py
+/path.sh
+/convert.sh.readme
+/convert.sh
+/print-transitions
+/context-to-pdf
+/make-pdf-to-tid-transducer
+/formats.py
+/loadBinary.py

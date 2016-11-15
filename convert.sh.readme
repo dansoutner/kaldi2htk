@@ -1,0 +1,11 @@
+# get GMM + HMM model
+# ! look inside script to set up NSE phones
+# ! use full triphone model with GMMs (from tri4? dir), fake GMM conversion is not tested
+# ! if trained with SAT, use final.alimdl model (is converted back to orig.features)
+python kaldi2AP.py <model.mdl> <phones.txt> <tree> <outputHTKmodel> <outputTiedlist>
+
+# convert nnet to txt format
+nnet-copy --binary=false <KaldiNet> <KaldiNet.txt>
+
+# make ERIS image
+python kaldi2NNEris.py <outputHTKmodel> <KaldiNet.txt> <KaldiFeatureTransform> <KaldiStateCounts> <outNNimage>
