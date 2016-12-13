@@ -1,10 +1,37 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
+# Copyright (c) 2016, Daniel Soutner, University of West Bohemia, Czechia
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted
+# provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions
+# and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions
+# and the following disclaimer in the documentation and/or other materials provided with the distribution.
+#
+# 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote
+# products derived from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+# INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+# OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import re
 import numpy as np
 import subprocess
 import sys
 import os
+import argparse
+
 sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
 
 # Path to bin
@@ -180,14 +207,14 @@ def to_htk_name(lst):
 	return lst[0]+"-"+lst[1]+"+"+lst[2]
 
 
-def convert(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="", GMM=False):
+def convert(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="", GMM=False, sil_pdf_classes=3):
 
 	# print all transitions
 	shell("./%s %s > %s" % (print_transitions_bin, fmdl, ".transitions"))
 	trans = load_kaldi_transitions(".transitions")
 
 	# print all triphones
-	shell("./%s --sil-pdf-classes=3 --sil-phones='' %s %s > %s" % (context_to_pdf_bin, fphones, ftree, ".ctx"))
+	shell("./%s --sil-pdf-classes=%d --sil-phones='%s' %s %s > %s" % (context_to_pdf_bin, sil_pdf_classes, silphones, fphones, ftree, ".ctx"))
 	hmms = load_kaldi_hmms(".ctx")
 
 	# phones
@@ -291,17 +318,29 @@ def convert(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="",
 
 if __name__ == "__main__":
 
-	SIL = ["SIL", "SPN", "NSN"]
-	silphones = "1,2,3,4,5,6,7,8,9"
+	DESCRIPTION = "Script for converting Kaldi GMM to HTK model"
 
-	if len(sys.argv) != 6:
-		print "Usage: kaldi2HTK.py <model.mdl> <phones.txt> <tree> <outputHTKmodel> <outputTiedlist>"
-		sys.exit()
+	parser = argparse.ArgumentParser(description=DESCRIPTION, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+	#parser.add_argument('--config', default=None,
+	#                    help='Config file, other keys will be set to default')
+	parser.add_argument('--silphones', default="1,2,3", type=str,
+	                    help='Numbers of silence phones, split by comma')
+	parser.add_argument('--vec-size', default=39, type=int,
+	                    help='Size of input vectors if you fake GMM model')
+	parser.add_argument('--sil-pdf-classes', default=3, type=int,
+	                    help='Silphones pdf classes, HTK default is 3, Kaldi default is 5')
+	parser.add_argument('--sil', type=str, default="SIL,SPN,NSN",
+	                    help='Sil phones names, split by comma', )
+	parser.add_argument("kaldi_model")
+	parser.add_argument("kaldi_phones")
+	parser.add_argument("kaldi_tree")
+	parser.add_argument("htk_output_model")
+	parser.add_argument("htk_output_tiedlist")
+	args = parser.parse_args()
 
-	MODEL_FILE = sys.argv[1]
-	PHONES_FILE = sys.argv[2]
-	TREE_FILE = sys.argv[3]
-	OUTPUT_MODEL_FILE = sys.argv[4]
-	OUTPUT_TIEDLIST_FILE = sys.argv[5]
+	SIL = args.sil.split(",")
 
-	convert(MODEL_FILE, PHONES_FILE, TREE_FILE, OUTPUT_MODEL_FILE, OUTPUT_TIEDLIST_FILE, vecSize=39, silphones=silphones, GMM=True)
+	convert(args.kaldi_model, args.kaldi_phones,args.kaldi_tree,
+			args.htk_output_model, args.htk.outputtiedlist,
+			vecSize=args.vec_size, silphones=args.silphones,
+			GMM=True, sil_pdf_classes=args.sil_pdf_classes)
