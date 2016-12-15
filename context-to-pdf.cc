@@ -28,8 +28,8 @@ int main(int argc, char **argv) {
 
 	const char *usage =
 		"Outputs Pdf for all possible triphones\n"
-		"Usage: allTriphonesToPdf <phone-symbols> <tree>\n"
-		"e.g.: allTriphonesToPdf phones.txt tree \n";
+		"Usage: context-to-pdf <phone-symbols> <tree>\n"
+		"e.g.: context-to-pdf phones.txt tree \n";
 	
     std::string silphones = "1,2,3";
     int32 silpdfclasses = 5;
@@ -90,35 +90,70 @@ int main(int argc, char **argv) {
         i1 = i2 + 1;
       } while (true);
 
+	KALDI_LOG << "Context width:" << ctx_dep.ContextWidth();
+	KALDI_LOG << "Central position:" << ctx_dep.CentralPosition();
 
-	// iter over all possible triphones
-	size_t nphones = phones_symtab->NumSymbols();
-	for (int32 l_ctx = 0; l_ctx < nphones; ++l_ctx) {
-		for (int32 ph = 1; ph < nphones; ++ph) { // not <eps>
-			for (int32 p_ctx = 0; p_ctx < nphones; ++p_ctx) {
+	// triphones
+	if((ctx_dep.ContextWidth() == 3) && (ctx_dep.CentralPosition() == 1)){
+		// iter over all possible triphones
+		size_t nphones = phones_symtab->NumSymbols();
+		for (int32 l_ctx = 0; l_ctx < nphones; ++l_ctx) {
+			for (int32 ph = 1; ph < nphones; ++ph) { // not <eps>
+				for (int32 p_ctx = 0; p_ctx < nphones; ++p_ctx) {
 
-				int32 pdf_id;
+					int32 pdf_id;
 
-				// triphone context vector
-				std::vector<int32> triphone;
-				triphone.push_back(l_ctx);
-				triphone.push_back(ph);
-				triphone.push_back(p_ctx);
+					KALDI_LOG << "OK";
 
-				//In the normal case the pdf-class is the same as the HMM state index (e.g. 0, 1 or 2), but pdf classes provide a way for the user to enforce sharing. 
-				// pdf-classes http://kaldi.sourceforge.net/hmm.html
-				int32 mpdf = (silset.find(ph) == silset.end() ?
-												nonsilpdfclasses :
-						                        silpdfclasses);
-				for (int32 pdf_class=0; pdf_class < mpdf; ++pdf_class) {
+					// triphone context vector
+					std::vector<int32> triphone;
+					triphone.push_back(l_ctx);
+					triphone.push_back(ph);
+					triphone.push_back(p_ctx);
 
-					//bool ContextDependency::Compute(const std::vector<int32> &phoneseq, int32 pdf_class, int32 *pdf_id)
-					ctx_dep.Compute(triphone, pdf_class, &pdf_id);
-					std::cout << phones_symtab->Find(l_ctx) << " " << phones_symtab->Find(ph) << " " << phones_symtab->Find(p_ctx) << " " << pdf_class << " " << pdf_id << "\n";
+					KALDI_LOG << "OK";
+
+					//In the normal case the pdf-class is the same as the HMM state index (e.g. 0, 1 or 2), but pdf classes provide a way for the user to enforce sharing. 
+					// pdf-classes http://kaldi.sourceforge.net/hmm.html
+					int32 mpdf = (silset.find(ph) == silset.end() ?
+													nonsilpdfclasses :
+													silpdfclasses);
+
+					KALDI_LOG << mpdf;
+					for (int32 pdf_class=0; pdf_class < mpdf; ++pdf_class) {
+						//bool ContextDependency::Compute(const std::vector<int32> &phoneseq, int32 pdf_class, int32 *pdf_id)
+						ctx_dep.Compute(triphone, pdf_class, &pdf_id);
+						std::cout << phones_symtab->Find(l_ctx) << " " << phones_symtab->Find(ph) << " " << phones_symtab->Find(p_ctx) << " " << pdf_class << " " << pdf_id << "\n";
+					}
 				}
 			}
 		}
 	}
+	// mono
+	if((ctx_dep.ContextWidth() == 1) && (ctx_dep.CentralPosition() == 0)){
+		// iter over all possible monophones
+		size_t nphones = phones_symtab->NumSymbols();
+		for (int32 ph = 1; ph < nphones; ++ph) { // not <eps>
+			int32 pdf_id;
+
+			// mono context vector
+			std::vector<int32> triphone;
+			triphone.push_back(ph);
+
+			//In the normal case the pdf-class is the same as the HMM state index (e.g. 0, 1 or 2), but pdf classes provide a way for the user to enforce sharing. 
+			// pdf-classes http://kaldi.sourceforge.net/hmm.html
+			int32 mpdf = (silset.find(ph) == silset.end() ?
+											nonsilpdfclasses :
+											silpdfclasses);
+
+			for (int32 pdf_class=0; pdf_class < mpdf; ++pdf_class) {
+				//bool ContextDependency::Compute(const std::vector<int32> &phoneseq, int32 pdf_class, int32 *pdf_id)
+				ctx_dep.Compute(triphone, pdf_class, &pdf_id);
+				std::cout << phones_symtab->Find(ph) << " " << pdf_class << " " << pdf_id << "\n";
+			}
+		}
+	}
+
 
  	} catch (const std::exception &e) {
 		std::cerr << e.what();

@@ -156,16 +156,23 @@ def load_kaldi_hmms(fctx):
 	hmm = []
 	for line in open(fctx):
 		lx = line.strip().split()
-		ctx = (lx[0], lx[1], lx[2])
-		n = int(lx[3])
-		pdf = int(lx[4])
+		if len(lx) == 5:
+			ctx = (lx[0], lx[1], lx[2])
+			n = int(lx[3])
+			pdf = int(lx[4])
+		elif len(lx) == 3:
+			ctx = (lx[0],)
+			n = int(lx[1])
+			pdf = int(lx[2])
+		else:
+			raise ValueError("Data not understood.")
 
 		# we do not need disambig phones
-		if "#" in ctx[0] or "#" in ctx[1] or "#" in ctx[2]:
+		if len(ctx) == 3 and ("#" in ctx[0] or "#" in ctx[1] or "#" in ctx[2]):
 			continue
 
 		# we do not need <eps>
-		if "<eps>" in ctx[0] or "<eps>" in ctx[1] or "<eps>" in ctx[2]:
+		if len(ctx) == 3 and ("<eps>" in ctx[0] or "<eps>" in ctx[1] or "<eps>" in ctx[2]):
 			continue
 
 		if n == 0:  # first state, start new HMM
@@ -204,7 +211,12 @@ def load_kaldi_phones(fphones):
 
 def to_htk_name(lst):
 	# original names
-	return lst[0]+"-"+lst[1]+"+"+lst[2]
+	if len(lst) == 3:
+		return lst[0]+"-"+lst[1]+"+"+lst[2]
+	elif len(lst) == 1:
+		return lst[0]
+	else:
+		raise ValueError("Only monophone/triphone models allowed.")
 
 
 def convert(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="", GMM=False, sil_pdf_classes=3):
@@ -241,13 +253,18 @@ def convert(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="",
 			for i, state in enumerate(hmm):
 				states.append(state)
 				for b in range(0, 2):
-					ph = phones2int[hmms[hmm][0][1]]
+					if len(hmms[hmm][0]) == 3:
+						ph = phones2int[hmms[hmm][0][1]]
+					elif len(hmms[hmm][0]) == 1:
+						ph = phones2int[hmms[hmm][0][0]]
+					else:
+						raise ValueError("Only mohophone/triphone models allowed.")
 					try:
 						# p = trans[state, ph, i, b]
 						p = trans[state, i, b]
 					except KeyError:
 						print "ERROR: Not found transition for pdf %d with phone %d at %d %d" % (state, ph, i, b)
-					trans_mat[i+1, b+i+1] = p
+					trans_mat[i + 1, b + i + 1] = p
 
 			# Print out transitions for this HMM
 			print >> fw, '~t "T_%s"' % trans_name
@@ -341,6 +358,6 @@ if __name__ == "__main__":
 	SIL = args.sil.split(",")
 
 	convert(args.kaldi_model, args.kaldi_phones,args.kaldi_tree,
-			args.htk_output_model, args.htk.outputtiedlist,
+			args.htk_output_model, args.htk_output_tiedlist,
 			vecSize=args.vec_size, silphones=args.silphones,
 			GMM=True, sil_pdf_classes=args.sil_pdf_classes)
