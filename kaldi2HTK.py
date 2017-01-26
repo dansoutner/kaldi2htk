@@ -263,7 +263,11 @@ def convert(fmdl, fphones, ftree, foutname, ftiedname, vecSize=39, silphones="",
 						# p = trans[state, ph, i, b]
 						p = trans[state, i, b]
 					except KeyError:
-						print "ERROR: Not found transition for pdf %d with phone %d at %d %d" % (state, ph, i, b)
+						if "#" in int2phones[ph]:
+							print "INFO: Not found transition for pdf %d with phone %d at %d %d" % (state, ph, i, b)
+						else:
+							print "ERROR: Not found transition for pdf %d with phone %d at %d %d" % (state, ph, i, b)
+							print "This could be bad error, probably some mistake in conversion?"
 					trans_mat[i + 1, b + i + 1] = p
 
 			# Print out transitions for this HMM
