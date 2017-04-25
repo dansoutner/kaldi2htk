@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
 
 					int32 pdf_id;
 
-					KALDI_LOG << "OK";
+					//KALDI_LOG << "OK";
 
 					// triphone context vector
 					std::vector<int32> triphone;
@@ -111,7 +111,7 @@ int main(int argc, char **argv) {
 					triphone.push_back(ph);
 					triphone.push_back(p_ctx);
 
-					KALDI_LOG << "OK";
+					//KALDI_LOG << "OK";
 
 					//In the normal case the pdf-class is the same as the HMM state index (e.g. 0, 1 or 2), but pdf classes provide a way for the user to enforce sharing. 
 					// pdf-classes http://kaldi.sourceforge.net/hmm.html
@@ -119,7 +119,7 @@ int main(int argc, char **argv) {
 													nonsilpdfclasses :
 													silpdfclasses);
 
-					KALDI_LOG << mpdf;
+					//KALDI_LOG << mpdf;
 					for (int32 pdf_class=0; pdf_class < mpdf; ++pdf_class) {
 						//bool ContextDependency::Compute(const std::vector<int32> &phoneseq, int32 pdf_class, int32 *pdf_id)
 						ctx_dep.Compute(triphone, pdf_class, &pdf_id);
