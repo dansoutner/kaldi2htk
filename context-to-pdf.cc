@@ -19,7 +19,7 @@
 
 
 #include "tree/tree-renderer.h"
-
+#include "tree/context-dep.h"
 
 int main(int argc, char **argv) {
   using namespace kaldi;
